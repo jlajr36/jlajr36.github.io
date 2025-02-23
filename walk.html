@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Walk with Color Gradient</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Initial position is in the center of the canvas
+        let position = { x: canvas.width / 2, y: canvas.height / 2 };
+
+        // Store all points visited by the random walk along with their color
+        let points = [];
+
+        // Define start and end colors for the gradient transition (red and blue)
+        const startColor = { r: 255, g: 0, b: 0 };  // Red
+        const endColor = { r: 0, g: 0, b: 255 };    // Blue
+
+        // Set the random walk step size
+        const stepSize = 5;
+
+        // Progress variable to handle the gradient interpolation
+        let progress = 0.0;
+
+        // Function to interpolate between two colors
+        function lerpColor(start, end, t) {
+            return {
+                r: Math.floor(start.r + (end.r - start.r) * t),
+                g: Math.floor(start.g + (end.g - start.g) * t),
+                b: Math.floor(start.b + (end.b - start.b) * t)
+            };
+        }
+
+        // Function to reset the walk
+        function resetWalk() {
+            points = [];
+            position = { x: canvas.width / 2, y: canvas.height / 2 };
+            points.push({ ...position, color: startColor });
+            progress = 0.0;
+        }
+
+        // Main game loop
+        function draw() {
+            // Clear the canvas each frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw all visited points
+            points.forEach(point => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgb(${point.color.r}, ${point.color.g}, ${point.color.b})`;
+                ctx.fill();
+            });
+
+            // Draw instructions
+            ctx.font = "20px Arial";
+            ctx.fillStyle = "black";
+            ctx.fillText("Press SPACE to reset the walk.", 10, 30);
+
+            // Handle random walk and color transition
+            if (Math.random() < 0.5) position.x += stepSize;   // Move right
+            else if (Math.random() < 0.5) position.x -= stepSize; // Move left
+
+            if (Math.random() < 0.5) position.y += stepSize;   // Move down
+            else if (Math.random() < 0.5) position.y -= stepSize; // Move up
+
+            // Check if position is off screen, reset if so
+            if (position.x < 0 || position.x > canvas.width || position.y < 0 || position.y > canvas.height) {
+                position = { x: canvas.width / 2, y: canvas.height / 2 };
+            }
+
+            // Calculate the interpolated color based on progress
+            const currentColor = lerpColor(startColor, endColor, progress);
+
+            // Store the new position with its color
+            points.push({ ...position, color: currentColor });
+
+            // Increase progress for the next color step, wrap at 1.0
+            progress += 0.005;
+            if (progress > 1.0) progress = 0.0;
+
+            // Request the next frame
+            requestAnimationFrame(draw);
+        }
+
+        // Event listener for resetting the walk
+        document.addEventListener("keydown", (event) => {
+            if (event.key === " ") {  // Space bar resets the walk
+                resetWalk();
+            }
+        });
+
+        // Initialize the walk and start the drawing loop
+        resetWalk();
+        draw();
+    </script>
+</body>
+</html>
